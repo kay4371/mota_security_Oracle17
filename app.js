@@ -7169,7 +7169,7 @@ app.post('https://mota-security-oracle.onrender.com/receptionist_newVisitor_entr
 
 
 
-app.post('https://mota-security-oracle.onrender.com/new_visitor', (req, res) => {
+app.post('/new_visitor', (req, res) => {
   // Handle saving visitor details logic here
   // Render the "awaiting visitor" page
   res.render('new_visitor.html'); // Replace with your template engine logic
@@ -7177,12 +7177,12 @@ app.post('https://mota-security-oracle.onrender.com/new_visitor', (req, res) => 
 
 // });
 // HR portal: WebSocket connection
-app.get('https://mota-security-oracle.onrender.com/hr_portal', (req, res) => {
+app.get('/hr_portal', (req, res) => {
   res.sendFile(__dirname + '/hr_portal.html');
 });
 
 // Security guard portal: WebSocket connection
-app.get('https://mota-security-oracle.onrender.com/security_portal', (req, res) => {
+app.get('/security_portal', (req, res) => {
   res.sendFile(__dirname + '/security_portal.html');
 });
 ///////////////////////////////////////////////////////////////////////////////////
