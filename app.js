@@ -6788,7 +6788,7 @@ await client.close();
 ///////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////
-app.post('https://mota-security-oracle.onrender.com/receive_gate_pass', async function (req, res) {
+app.post('/receive_gate_pass', async function (req, res) {
   const gatePassTicket = req.body;
 
   try {
@@ -6867,7 +6867,7 @@ function generateTicketPDF(ticketData) {
 }
 
 
-app.delete('https://mota-security-oracle.onrender.com/deleteDriver/:id', async function (req, res) {
+app.delete('/deleteDriver/:id', async function (req, res) {
   const driverId = req.params.id;
 
   try {
@@ -6903,7 +6903,7 @@ app.delete('https://mota-security-oracle.onrender.com/deleteDriver/:id', async f
   }
 });
 
-app.post('https://mota-security-oracle.onrender.com/addDriverToHistory', async function (req, res) {
+app.post('/addDriverToHistory', async function (req, res) {
   const driverData = req.body;
 
   try {
@@ -6928,7 +6928,7 @@ app.post('https://mota-security-oracle.onrender.com/addDriverToHistory', async f
 
 
 // Security guard portal: Return driver
-app.post('https://mota-security-oracle.onrender.com/return_driver/:driverId', async function (req, res) {
+app.post('/return_driver/:driverId', async function (req, res) {
   const driverId = req.params.driverId;
 
   try {
@@ -6954,7 +6954,7 @@ app.post('https://mota-security-oracle.onrender.com/return_driver/:driverId', as
 });
 
 
-app.get('https://mota-security-oracle.onrender.com/get_visitor_history', async function (req, res) {
+app.get('/get_visitor_history', async function (req, res) {
   try {
     await client.connect();
     const database = client.db('olukayode_sage');
@@ -6972,7 +6972,7 @@ app.get('https://mota-security-oracle.onrender.com/get_visitor_history', async f
   }
 })
 
-app.post('https://mota-security-oracle.onrender.com/send_driver_details', async function (req, res) {
+app.post('/send_driver_details', async function (req, res) {
   const MovementData = req.body; // Assuming the visitor data is sent in the request body
 
   try {
@@ -7050,7 +7050,7 @@ app.post('https://mota-security-oracle.onrender.com/send_driver_details', async 
 // });
 
 
-app.post('https://mota-security-oracle.onrender.com/addVisitorHistory', async function (req, res) {
+app.post('/addVisitorHistory', async function (req, res) {
   const visitorData = req.body; // Assuming the visitor data is sent in the request body
 
   try {
@@ -7161,7 +7161,7 @@ Kindly reach out to the receptionist to meet them.`;
   }
 });
 
-app.post('https://mota-security-oracle.onrender.com/receptionist_newVisitor_entry', (req, res) => {
+app.post('/receptionist_newVisitor_entry', (req, res) => {
   // Handle saving visitor details logic here
   // Render the "awaiting visitor" page
   res.render('receptionist_newVisitor_entry.html'); // Replace with your template engine logic
@@ -7208,16 +7208,530 @@ app.on('upgrade', (req, socket, head) => {
   }
 });
 
+//////////////////////////////////////////////////////////////////////////////
+
+app.delete('/delete_visitor_details/:id', async function (req, res) {
+  const visitorId = req.params.id; // Get the visitor's ID from the request parameters
+
+  try {
+    await client.connect(); // Connect to the MongoDB client
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('Visitors_details_Database');
+
+    // Delete the visitor details from the database based on the ID
+    const result = await collection.deleteOne({ _id: ObjectId(visitorId) });
+
+    if (result.deletedCount === 1) {
+      res.send('Visitor details deleted successfully');
+    } else {
+      res.status(404).send('Visitor not found');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while deleting visitor details');
+  } finally {
+    await client.close(); // Close the MongoDB client connection
+  }
+});
+
+
+app.put('/edit_visitor_details/:id', async function (req, res) {
+  const visitorId = req.params.id; // Get the visitor's ID from the request parameters
+  const updatedVisitorDetails = {
+    // Fields to be updated based on the request body
+    name: req.body.name,
+    address: req.body.address,
+    whomToSee: req.body.whomToSee,
+    purposeOfVisit: req.body.purposeOfVisit,
+    phoneNumber: req.body.phoneNumber
+  };
+
+  try {
+    await client.connect(); // Connect to the MongoDB client
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('Visitors_details_Database');
+
+    // Update the visitor details in the database based on the ID
+    const result = await collection.updateOne(
+      { _id: ObjectId(visitorId) },
+      { $set: updatedVisitorDetails }
+    );
+
+    if (result.matchedCount === 1) {
+      res.send('Visitor details updated successfully');
+    } else {
+      res.status(404).send('Visitor not found');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while updating visitor details');
+  } finally {
+    await client.close(); // Close the MongoDB client connection
+  }
+});
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+app.post('/add_new_driver', async (req, res) => {
+  const newDriver = {
+    // _id: req.body._id,
+    driver_name: req.body.driver_name,
+    driverPhone: req.body.driverPhone,
+    pAssignee: req.body.pAssignee,
+    driversAddress: req.body.driversAddress,
+    sourceCompany: req.body.sourceCompany,
+    dateofemployment: req.body.dateofemployment,
+
+  };
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('drivers_parameters');
+    // Save the new driver details to the database
+    const result = await collection.insertOne(newDriver);
+
+    // const message = {
+    //   type: 'new_driver_added',
+    //   newDriver,
+    // };
+    // sendSSEMessage('sse_new_driver_added', message);
+    // console.log('Sending SSE message:', message);
+
+    res.status(201).json({ message: 'New drivers details added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while adding new drivers details');
+  } finally {
+    await client.close();
+  }
+});
+
+
+//add new expatriates
+app.post('/add_new_expatriate', async (req, res) => {
+  const newExpatriateDetails = {
+    name: req.body.name,
+    countryOfOrigin: req.body.country_of_origin,
+    phoneNumber: req.body.phone_number,
+    houseAddress: req.body.house_address,
+    unit: req.body.unit,
+  };
+
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('expatriates_collection');
+
+    // Save the new expatriate details to the database
+    const result = await collection.insertOne(newExpatriateDetails);
+
+    res.status(201).json({ message: 'New expatriate details added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while adding new expatriate details');
+  } finally {
+    await client.close();
+  }
+});
+
+
+app.post('/add_new_vehicle', async (req, res) => {
+  const newVehicleDetails = {
+    plate_number: req.body.plate_number,
+    vehicle_brand: req.body.vehicle_brand,
+    vehicle_type: req.body.vehicle_type,
+  };
+
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('vehicles_collection');
+
+    // Save the new vehicle details to the database
+    const result = await collection.insertOne(newVehicleDetails);
+
+    res.status(201).json({ success: true, message: 'New vehicle details added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'An error occurred while adding new vehicle details' });
+  } finally {
+    await client.close();
+  }
+});
+
+
+app.get('/get_vehicle_numbers', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('vehicles_collection');
+
+    // Omitting the projection parameter to include all fields
+    const vehicles = await collection.find({}).toArray();
+
+    res.json({ success: true, vehicleNumbers: vehicles });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'An error occurred while retrieving vehicle plate numbers' });
+  } finally {
+    await client.close();
+  }
+});
+
+
+
+
+app.get('/get_expatriate_names', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('expatriates_collection');
+
+    // Fetch expatriates data
+    const expatriates = await collection.find({}, { projection: { _id: 1, name: 1, unit: 1, phoneNumber: 1 } }).toArray();
+
+    // Map expatriates data to options for the dropdown
+    const expatriateOptions = expatriates.map(expatriate => ({
+      _id: expatriate._id.toString(),
+      name: expatriate.name,
+      unit: expatriate.unit,
+      phoneNumber: expatriate.phoneNumber
+    }));
+
+    res.json(expatriateOptions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while retrieving expatriate names');
+  } finally {
+    await client.close();
+  }
+});
+
+// //////////////////////////////////////////////////////////
+
+// Start the server
+app.get('/receive_driver_parameters', async function (req, res) {
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('drivers_parameters');
+    const drivers_details = await collection.find({}).toArray();
+    console.log('Expected visitors:', drivers_details);
+    res.json(drivers_details);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while retrieving drivers details');
+  } finally {
+    await client.close();
+  }
+});
+
+app.post('/send_driver_parameters', async function (req, res) {
+  const driverDetails = {
+    driver_name: req.body.driver_name,
+    driverPhone: req.body.driverPhone,
+    pAssignee: req.body.pAssignee,
+    driversAddress: req.body.driversAddress,
+    sourceCompany: req.body.sourceCompany,
+    dateofemployment: req.body.dateofemployment,
+  };
+
+  try {
+    // Connect to the MongoDB client
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const kaydata = database.collection('drivers_parameters');
+
+    // Save the driver details to the database
+    const result = await kaydata.insertOne(driverDetails);
+
+    // Notify HR unit with a message
+    for (const hrClient of hrClients) {
+      hrClient.send('HR unit has a new message');
+    }
+
+    // Notify security unit with a message
+    for (const securityClient of securityClients) {
+      securityClient.send('HR unit has a new message');
+    }
+
+    res.send('Driver details sent successfully');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while receiving driver details');
+  } finally {
+    await client.close(); // Close the MongoDB client connection
+  }
+});
+
+
+
+// Endpoint for adding a new escort to the escort database
+
+app.post('/add_new_escort', async (req, res) => {
+  const newEscort = {
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    phoneNumber: req.body.phoneNumber,
+    unit: req.body.unit,
+    houseAddress: req.body.houseAddress,
+    rank: req.body.rank,
+    designation: req.body.designation, // Include the new designation field
+  };
+
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('escorts');
+    const result = await collection.insertOne(newEscort);
+
+    res.status(201).json({ message: 'New escort added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while adding new escort');
+  } finally {
+    await client.close();
+  }
+});
+
+
+
+// Add a new endpoint for fetching escorts
+app.get('/fetch_armed_guards', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('escorts');
+    const escorts = await collection.find().toArray();
+
+    res.json(escorts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while fetching escorts');
+  } finally {
+    await client.close();
+  }
+});
+
+
+const cleanPhoneNumber = (phoneNumber) => {
+  // Remove any non-numeric characters except '+'
+  const cleanedNumber = phoneNumber.replace(/[^\d+]/g, '');
+
+  // Check if the cleaned number starts with +2340
+  if (cleanedNumber.startsWith('+2340')) {
+    // Remove the "0" after +234
+    return '+234' + cleanedNumber.slice(5);
+  }
+
+  // Return the cleaned number as is
+  return cleanedNumber;
+};
+
+
+// /////////////////////////////////////////////////working no stored id
+app.use(session({ secret: secretKey, resave: true, saveUninitialized: true }));
+
+
+// // // Login endpoint
+// // app.post('/login', async (req, res) => {
+// //   const { phoneNumber, password } = req.body;
+// //   const cleanedPhoneNumber = cleanPhoneNumber(phoneNumber);
+// //   const code = req.generatedCode;
+
+// //   // Use the code in your logic
+// //   // res.json({ message: 'Using generated code', code });
+  
+// //   try {
+// //     // Connect to MongoDB
+// //     await client.connect();
+
+// //     const database = client.db('olukayode_sage');
+// //     const userCollection = database.collection('registered_user_config_database');
+// //     const configCollection = database.collection('user_config_databse');
+// //     const userIdCollection = database.collection('user_id_collection');
+
+// //     // Find user by phoneNumber instead of cleaned one
+// //     const user = await userCollection.findOne({ phoneNumber: cleanedPhoneNumber });
+// //     console.log('Using generated code 1', code)
+// //     // Check if the user is found
+// //     if (!user) {
+// //       res.status(404).json({ message: 'Account not registered. Please register an account.' });
+// //       return; // Return to avoid further processing
+// //     }
+
+// //     // Ensure that user._id is defined before accessing it
+// //     if (user._id) {
+// //         // Use the same customId generation logic as in the middleware
+// //         const generatedCustomId = code;
+// //         console.log('Generated CustomId:', generatedCustomId);
+      
+// //         // Save user_id mapping in user_id_collection
+// //         await userIdCollection.updateOne(
+// //           { _id: user._id },
+// //           { $set: { customId: generatedCustomId, phoneNumber: cleanedPhoneNumber } },
+// //           { upsert: true }
+// //         );
+      
+
+// //       // Inside the login endpoint
+// //       if (await bcrypt.compare(password, user.passwordHash)) {
+// //         // Store user's unique identifier and name in the session
+// //         req.session.userId = user._id;
+// //         req.session.userName = user.name;
+
+// //         // Fetch user role from the config collection
+// //         const config = await configCollection.findOne({ phoneNumber: user.phoneNumber });
+
+// //         if (config) {
+// //           // Passwords match, generate a JWT token
+// //           const token = jwt.sign(
+// //             { phoneNumber: user.phoneNumber, role: config.configuredRole },
+// //             secretKey,
+// //             { expiresIn: '1h' }
+// //           );
+
+// //           // Redirect based on user role
+// //           switch (config.configuredRole) {
+// //             case 'security':
+// //               res.json({ redirect: '/security_portal.html', token });
+// //               break;
+// //             case 'receptionist':
+// //               res.json({ redirect: '/receptionist.html', token });
+// //               break;
+// //             case 'transport':
+// //               res.json({ redirect: '/transport_unit.html', token });
+// //               break;
+// //             // Add more cases for other roles if needed
+// //             default:
+// //               res.status(400).json({ message: 'Unknown role' });
+// //               return;
+// //           }
+// //         } else {
+// //           console.log('User configuration not found.');
+// //           res.status(400).json({ message: 'User configuration not found' });
+// //         }
+// //       } else {
+// //         // Invalid credentials
+// //         console.log('Invalid credentials.');
+// //         res.status(401).json({ message: 'Invalid credentials...' });
+// //       }
+// //     } else {
+// //       console.log('User id not found.');
+// //       res.status(500).json({ message: 'Internal server error' });
+// //     }
+// //   } catch (error) {
+// //     console.error('Error during login:', error);
+// //     res.status(500).json({ message: 'Internal server error' });
+// //   } finally {
+// //     // Close the MongoDB connection
+// //     await client.close();
+// //   }
+// // });
+// const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+// Fetch user name endpoint
+// Fetch user name endpoint
+app.post('/registered_user_name', async (req, res) => {
+  const userId = req.session.userId;
+
+  try {
+    // Connect to MongoDB
+    await client.connect();
+
+    const database = client.db('olukayode_sage');
+    const usersCollection = database.collection('registered_user_config_database');
+
+    // Fetch the name of the registered person from registered_user_config_database
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+
+    if (user) {
+      // Extract the first name from the full name
+      const fullName = user.name;
+      const firstName = fullName.split(' ')[0]; // Assuming the first name is the first word
+
+      // Send both the user's full name and first name as a JSON response
+      res.json({ fullName, firstName });
+    } else {
+      // If user not found, send an appropriate response
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user name:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    // Close the MongoDB connection
+    await client.close();
+  }
+});
+// /////////////////////////////////////////////////////////////
+
+
+app.post('/securityOfficers', async (req, res) => {
+  const { name, phoneNumber, designation, email } = req.body;
+  const securityOfficer = {
+    name: name,
+    phoneNumber: phoneNumber,
+    designation: designation,
+    email: email
+  };
+
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('security_officers');
+    const result = await collection.insertOne(securityOfficer);
+
+    res.status(201).json({ message: 'New security_officers added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('An error occurred while adding new security_officers');
+  } finally {
+    await client.close();
+  }
+});
 
 
 
 
 
+// Fetch the data of security officers
+app.get('/rerieve_security_Officers', async (req, res) => {
+  try {
+    await client.connect();
+    const database = client.db('olukayode_sage');
+    const collection = database.collection('security_officers');
 
+    // Query to retrieve security managers (case-insensitive)
+    const managers = await collection.find({ designation: { $regex: 'security manager', $options: 'i' } })
+      .project({ _id: 0, name: 1, phoneNumber: 1, email: 1, designation: 1 })
+      .toArray();
 
+    // Query to retrieve security technicians (case-insensitive)
+    const technicians = await collection.find({ designation: { $regex: 'security technician', $options: 'i' } })
+      .project({ _id: 0, name: 1, phoneNumber: 1, email: 1, designation: 1 })
+      .toArray();
 
+    // Query to retrieve security supervisors (case-insensitive)
+    const supervisors = await collection.find({ designation: { $regex: 'security supervisor', $options: 'i' } })
+      .project({ _id: 0, name: 1, phoneNumber: 1, email: 1, designation: 1 })
+      .toArray();
 
+    // Combine all security officers into a single object
+    const allSecurityOfficers = {
+      managers: managers,
+      technicians: technicians,
+      supervisors: supervisors
+    };
 
+    // Send response with all security officers
+    res.status(200).json(allSecurityOfficers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'An error occurred while retrieving security officers' });
+  } finally {
+    await client.close();
+  }
+});
 
 
 /////////////////////////////////////////////////////////////////////////////
